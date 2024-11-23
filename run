@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+compile() (
+  # To make keyboard interrupt be able to
+  # interrupt only 'compile' if it is running
+  trap - INT
+  
+  source_file="$_dirname/$filename"
+  gcc $source_file -o .binary # -lm -lcs50 # for cs50 course lib
+)
+
+run() (
+  # To make keyboard interrupt be able to
+  # interrupt only 'run' if it is running
+  trap - INT
+
+  if [[ $args == "" ]]; then
+    $_dirname/.binary
+  else
+    $_dirname/.binary $args
+  fi
+)
+
+main() {
+  # To avoid keyboard interrupt to stop whole script
+  trap '' INT
+  _dirname="$(pwd)"
+  filename=$1
+  args=""
+  # Filling args if any (in case of any lib flags are required)
+  for arg in "$@"; do
+    if [[ $arg != $1 ]]; then
+      args="${args} $arg";
+    fi
+  done
+
+  compile
+  run
+  # Because of the trap calls, now even cancelling above commands
+  # it will always clear the binary if it exists
+  [ -e "$_dirname/.binary" ] && rm $_dirname/.binary
+}
+
+main $@
